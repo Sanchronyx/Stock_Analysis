@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>
+            body {
+                text-align: center;
+                background-color: #f4f4f9;
+                font-family: 'Arial', sans-serif;
+            }
+
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background-color: #44d7f7;
+                padding: 15px 20px;
+                border-radius: 10px;
+                margin: 20px auto;
+                max-width: 90%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .header div {
+                font-size: 22px;
+                font-weight: bold;
+                color: white;
+            }
+
+            .search-container {
+                position: relative;
+                width: 50%;
+            }
+
+            .search-input {
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: none;
+                outline: none;
+                font-size: 16px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Auto-suggest styling */
+            .search-results {
+                position: absolute;
+                width: 100%;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                max-height: 200px;
+                overflow-y: auto;
+                display: none;
+                z-index: 1000;
+            }
+
+            .search-results div {
+                padding: 10px;
+                cursor: pointer;
+                border-bottom: 1px solid #ddd;
+                font-size: 16px;
+                font-weight: bold;
+                color: black; /* Dark black text */
+                font-family: 'Arial', sans-serif;
+                text-align: left;
+            }
+
+            .search-results div:hover {
+                background-color: #f0f0f0;
+            }
+
+            .btn-container {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 20px;
+                margin-top: 40px;
+            }
+
+            .btn-custom {
+                width: 220px;
+                height: 220px;
+                background-color: #44d7f7;
+                border-radius: 25px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 10px;
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+                text-decoration: none;
+                transition: transform 0.2s, box-shadow 0.2s;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .btn-custom:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+                background-color: #3bc6e5;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="header">
+            <a href="/" style="text-decoration: none; color: white; font-weight: bold;">
+                🏠 STOCK ANALYSIS PROJECT
+            </a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search for stock ID or name..." onkeyup="filterStocks()">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            <div>🔍</div>
+        </div>
+
+        {% block body %}{% endblock %}
+
+        <script>
+            let stocks = [];
+
+            async function fetchStockData() {
+                const response = await fetch('/get-stock-data');
+                stocks = await response.json();
+            }
+
+            function filterStocks() {
+                let input = document.getElementById("searchInput").value.toLowerCase();
+                let resultsDiv = document.getElementById("searchResults");
+                resultsDiv.innerHTML = "";
+                resultsDiv.style.display = "none";
+
+                if (input.length === 0) return;
+
+                let filteredStocks = stocks.filter(stock => 
+                    stock["代號"].toLowerCase().includes(input) || 
+                    stock["名稱"].toLowerCase().includes(input)
+                ).slice(0, 10); // Show top 10 matches
+
+                if (filteredStocks.length > 0) {
+                    resultsDiv.style.display = "block";
+                    filteredStocks.forEach(stock => {
+                        let div = document.createElement("div");
+                        div.textContent = `${stock["代號"]} - ${stock["名稱"]}`;
+                        div.onclick = function() {
+                            document.getElementById("searchInput").value = stock["代號"];
+                            resultsDiv.style.display = "none";
+                        };
+                        resultsDiv.appendChild(div);
+                    });
+                }
+            }
+
+            window.onload = fetchStockData;
+        </script>
+    </body>
+</html>

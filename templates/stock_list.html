@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <div class="table-wrapper">
+        <div class="table-container">
+            <table id="stockTable" class="styled-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Rank ⬍</th>
+                        <th onclick="sortTable(1)">Stock ID ⬍</th>
+                        <th onclick="sortTable(2)">Stock Name ⬍</th>
+                        <th onclick="sortTable(3)">Average Dividend (%) ⬍</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr>
+                        <td>#{{ loop.index + start }}</td>
+                        <td>{{ stock['代號'] }}</td>
+                        <td>{{ stock['名稱'] }}</td>
+                        <td>{{ stock['平均配息率'] }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('stock_list', page=1) }}" class="page-link">1</a>
+                {% if page > 2 %}
+                    <span>...</span>
+                {% endif %}
+            {% endif %}
+
+            {% for i in range(page-2, page+3) %}
+                {% if i > 1 and i < total_pages %}
+                    <a href="{{ url_for('stock_list', page=i) }}" class="page-link">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %}
+                {% if page < total_pages - 1 %}
+                    <span>...</span>
+                {% endif %}
+                <a href="{{ url_for('stock_list', page=total_pages) }}" class="page-link">{{ total_pages }}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .table-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            max-width: 80%;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+            text-align: left;
+        }
+        .styled-table thead tr {
+            background-color: #44d7f7;
+            color: #ffffff;
+            text-align: left;
+        }
+        .styled-table th, .styled-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+        .styled-table tbody tr:nth-child(even) {
+            background-color: #f3f3f3;
+        }
+        .styled-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            padding: 5px 10px;
+            margin: 5px;
+            border: 1px solid #007bff;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .pagination a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+
+    <script>
+        function filterTable() {
+            let input = document.getElementById("searchInput").value.toLowerCase();
+            let rows = document.querySelectorAll("#stockTable tbody tr");
+
+            rows.forEach(row => {
+                let stockId = row.cells[1].innerText.toLowerCase();
+                let stockName = row.cells[2].innerText.toLowerCase();
+                row.style.display = (stockId.includes(input) || stockName.includes(input)) ? "" : "none";
+            });
+        }
+    </script>
+
+    {% endblock %}

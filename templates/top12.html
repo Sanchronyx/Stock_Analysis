@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h2 class="section-title">Top 12 Stocks by Dividend Payout</h2>
+
+    <div class="grid-container">
+        {% for stock in stocks %}
+        <div class="stock-card">
+            <h3>{{ stock['名稱'] }}</h3>
+            <p><strong>Stock ID:</strong> {{ stock['代號'] }}</p>
+            <p><strong>Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        .section-title {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stock-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #44d7f7;
+        }
+
+        .stock-card h3 {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .stock-card p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+    </style>
+
+{% endblock %}
