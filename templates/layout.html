@@ -138,7 +138,7 @@
                 let filteredStocks = stocks.filter(stock => 
                     stock["代號"].toLowerCase().includes(input) || 
                     stock["名稱"].toLowerCase().includes(input)
-                ).slice(0, 10); // Show top 10 matches
+                ).slice(0, 10); 
 
                 if (filteredStocks.length > 0) {
                     resultsDiv.style.display = "block";
@@ -146,9 +146,8 @@
                         let div = document.createElement("div");
                         div.textContent = `${stock["代號"]} - ${stock["名稱"]}`;
                         div.onclick = function() {
-                            document.getElementById("searchInput").value = stock["代號"];
-                            resultsDiv.style.display = "none";
-                        };
+                            window.location.href = `/stock/${stock["代號"]}`;
+                        };                        
                         resultsDiv.appendChild(div);
                     });
                 }

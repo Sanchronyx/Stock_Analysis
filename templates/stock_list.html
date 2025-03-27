@@ -14,14 +14,14 @@
                 </thead>
                 <tbody>
                     {% for stock in stocks %}
-                    <tr>
+                    <tr onclick="window.location='/stock/{{ stock['代號'] }}'" style="cursor: pointer;">
                         <td>#{{ loop.index + start }}</td>
                         <td>{{ stock['代號'] }}</td>
                         <td>{{ stock['名稱'] }}</td>
                         <td>{{ stock['平均配息率'] }}%</td>
                     </tr>
                     {% endfor %}
-                </tbody>
+                </tbody>                
             </table>
         </div>
 

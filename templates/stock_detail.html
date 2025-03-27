@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <div class="container mt-5">
+        {% if stock %}
+            <h2>{{ stock['名稱'] }} ({{ stock['代號'] }})</h2>
+            <p><strong>Average Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
+            <p><strong>Company Description:</strong> {{ stock['公司簡介'] or "No description available." }}</p>
+        {% else %}
+            <h2>Stock not found</h2>
+        {% endif %}
+    </div>
+{% endblock %}

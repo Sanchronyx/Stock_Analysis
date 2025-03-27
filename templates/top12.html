@@ -2,16 +2,16 @@
 
 {% block body %}
     <h2 class="section-title">Top 12 Stocks by Dividend Payout</h2>
-
     <div class="grid-container">
         {% for stock in stocks %}
-        <div class="stock-card">
-            <h3>{{ stock['名稱'] }}</h3>
-            <p><strong>Stock ID:</strong> {{ stock['代號'] }}</p>
-            <p><strong>Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
-        </div>
+        <a href="/stock/{{ stock['代號'] }}" style="text-decoration: none; color: inherit;">
+            <div class="stock-card">
+                <h3>{{ stock['名稱'] }}</h3>
+                <p><strong>Stock ID:</strong> {{ stock['代號'] }}</p>
+                <p><strong>Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
+            </div>
+        </a>
         {% endfor %}
-    </div>
 
     <style>
         .section-title {
