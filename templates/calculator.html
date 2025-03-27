@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block body %}
+    <div class="container mt-5">
+        <h2 class="mb-4">💰 Dividend Calculator</h2>
+        <form method="POST" class="form-group" style="max-width: 400px; margin: auto;">
+            <label>Stock Price (per share)</label>
+            <input type="number" step="0.01" name="stock_price" class="form-control" required><br>
+
+            <label>Number of Shares</label>
+            <input type="number" name="shares" class="form-control" required><br>
+
+            <label>Average Dividend Yield (%)</label>
+            <input type="number" step="0.01" name="yield" class="form-control" required><br>
+
+            <button type="submit" class="btn btn-primary">Calculate</button>
+        </form>
+
+        {% if result %}
+            <div class="mt-4">
+                {% if result is string %}
+                    <p style="color: red;">{{ result }}</p>
+                {% else %}
+                    <p><strong>Dividend per Share:</strong> ${{ result.dividend_per_share }}</p>
+                    <p><strong>Total Annual Dividend:</strong> ${{ result.total_dividend }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
