@@ -15,6 +15,8 @@ df_selected['代號'] = df_selected['代號'].astype(str)
 company_info_df['代號'] = company_info_df['代號'].astype(str)
 company_info_df = company_info_df.drop(columns=['名稱'])
 df_selected = pd.merge(df_selected, company_info_df, on='代號', how='left')
+df_selected['公司簡介'] = df_selected['公司簡介'].replace(['nan', 'NaN'], None)
+df_selected['公司簡介'] = df_selected['公司簡介'].fillna("No description available.")
 stocks = df_selected.to_dict(orient='records')
 
 
