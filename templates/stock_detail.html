@@ -1,19 +1,24 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div class="container mt-5">
-        {% if stock %}
-            <h2>{{ stock['名稱'] }} ({{ stock['代號'] }})</h2>
-            <p><strong>Average Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
-            <p><strong>Company Description:</strong>
-            <p><strong>股價:</strong> {{ stock['股價'] }}</p>
-            <p><strong>預估EPS:</strong> {{ stock['預估EPS'] }}</p>
-            <p><strong>盈餘殖利率:</strong> {{ stock['盈餘殖利率(%)'] }}%</p>
-
-                {{ stock['公司簡介'] if stock['公司簡介'] and stock['公司簡介'] != 'nan' else "No description available." }}
-            </p>            
-        {% else %}
-            <h2>Stock not found</h2>
+<div class="container mt-5">
+    {% if stock %}
+        <h2>{{ stock['名稱'] }} ({{ stock['代號'] }})</h2>
+        
+        {% if stock.image_url %}
+            <img src="{{ stock.image_url }}" alt="Company Image" style="max-width: 200px; border-radius: 10px; margin: 15px 0;">
         {% endif %}
-    </div>
+
+        <p><strong>股價:</strong> {{ stock['股價'] }}</p>
+        <p><strong>預估EPS:</strong> {{ stock['預估EPS'] }}</p>
+        <p><strong>盈餘殖利率:</strong> {{ stock['盈餘殖利率(%)'] }}%</p>
+        <p><strong>配息殖利率:</strong> {{ stock['配息殖利率(%)'] }}%</p>
+        <hr>
+        <h4>公司簡介</h4>
+        <p>{{ stock['公司簡介'] }}</p>
+
+    {% else %}
+        <h2>Stock not found</h2>
+    {% endif %}
+</div>
 {% endblock %}

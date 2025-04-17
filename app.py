@@ -6,7 +6,7 @@ app = Flask(__name__)
 # CALCULATIONS FROM 育成 FOR THE EPS & Profit Margins
 calc_df = pd.read_csv("calculations.csv")
 calc_df['代號'] = calc_df['代號'].astype(str).str.replace('="', '').str.replace('"', '')
-df_selected = calc_df[['名稱', '代號', '股價', '預估EPS', '盈餘殖利率(%)']].copy()
+df_selected = calc_df[['名稱', '代號', '股價', '配息殖利率(%)', '盈餘殖利率(%)']].copy()
 
 # COMPANY INTRODUCTION FILE
 company_info_df = pd.read_csv("company_info.csv")
@@ -19,7 +19,7 @@ df_selected['公司簡介'] = df_selected['公司簡介'].replace(['nan', 'NaN']
 df_selected['公司簡介'] = df_selected['公司簡介'].fillna("No description available.")
 
 # SORT FILES
-df_selected = df_selected.sort_values(by='預估EPS', ascending=False)
+df_selected = df_selected.sort_values(by='盈餘殖利率(%)', ascending=False)
 df_selected.reset_index(drop=True, inplace=True)
 stocks = df_selected.to_dict(orient='records')
 
@@ -54,7 +54,14 @@ def stock_list():
 @app.route('/stock/<stock_id>')
 def stock_detail(stock_id):
     stock_info = next((stock for stock in stocks if stock["代號"] == stock_id), None)
+
+    # if stock_info:
+    #     latest_data = fetch_latest_stock_data(stock_id)
+    #     stock_info.update(latest_data)
+    #     stock_info["image_url"] = f"/static/images/{stock_id}.jpg"
+
     return render_template('stock_detail.html', stock=stock_info)
+
 
 @app.route('/calculator', methods=['GET', 'POST'])
 def calculator():

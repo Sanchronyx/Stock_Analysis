@@ -10,7 +10,7 @@
                         <th onclick="sortTable(1)">Stock ID ⬍</th>
                         <th onclick="sortTable(2)">Stock Name ⬍</th>
                         <th onclick="sortTable(4)">股價 ⬍</th>
-                        <th onclick="sortTable(5)">預估EPS ⬍</th>
+                        <th onclick="sortTable(5)">配息殖利率(%) ⬍</th>
                         <th onclick="sortTable(6)">盈餘殖利率 (%) ⬍</th>
                     </tr>
                 </thead>
@@ -21,7 +21,7 @@
                         <td>{{ stock['代號'] }}</td>
                         <td>{{ stock['名稱'] }}</td>
                         <td>{{ stock['股價'] }}</td>
-                        <td>{{ stock['預估EPS'] }}</td>
+                        <td>{{ stock['配息殖利率(%)'] }}</td>
                         <td>{{ stock['盈餘殖利率(%)'] }}%</td>
                     </tr>
                     {% endfor %}
