@@ -1,14 +1,16 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <h2 class="section-title">Top 12 Stocks by Dividend Payout</h2>
+    <h2 class="section-title">Top 12 Stocks by EPS Calculations</h2>
     <div class="grid-container">
         {% for stock in stocks %}
         <a href="/stock/{{ stock['代號'] }}" style="text-decoration: none; color: inherit;">
             <div class="stock-card">
                 <h3>{{ stock['名稱'] }}</h3>
                 <p><strong>Stock ID:</strong> {{ stock['代號'] }}</p>
-                <p><strong>Dividend Payout:</strong> {{ stock['平均配息率'] }}%</p>
+                <p><strong>股價:</strong> {{ stock['股價'] }}</p>
+                <p><strong>預估EPS:</strong> {{ stock['預估EPS'] }}</p>
+                <p><strong>盈餘殖利率:</strong> {{ stock['盈餘殖利率(%)'] }}%</p>
             </div>
         </a>
         {% endfor %}

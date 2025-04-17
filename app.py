@@ -3,20 +3,24 @@ import pandas as pd
 
 app = Flask(__name__)
 
-file_path = "scrape.csv"
-df = pd.read_csv(file_path)
-df_selected = df[['名稱', '代號', '平均配息率']].copy()
-df_selected['代號'] = df_selected['代號'].astype(str).str.replace('="', '').str.replace('"', '')
-df_selected = df_selected.sort_values(by='平均配息率', ascending=False)
-df_selected.reset_index(drop=True, inplace=True)
-stocks = df_selected.to_dict(orient='records')
+# CALCULATIONS FROM 育成 FOR THE EPS & Profit Margins
+calc_df = pd.read_csv("calculations.csv")
+calc_df['代號'] = calc_df['代號'].astype(str).str.replace('="', '').str.replace('"', '')
+df_selected = calc_df[['名稱', '代號', '股價', '預估EPS', '盈餘殖利率(%)']].copy()
+
+# COMPANY INTRODUCTION FILE
 company_info_df = pd.read_csv("company_info.csv")
-df_selected['代號'] = df_selected['代號'].astype(str)
 company_info_df['代號'] = company_info_df['代號'].astype(str)
-company_info_df = company_info_df.drop(columns=['名稱'])
+company_info_df = company_info_df[['代號', '公司簡介']]  
+
+# MERGE FILES
 df_selected = pd.merge(df_selected, company_info_df, on='代號', how='left')
 df_selected['公司簡介'] = df_selected['公司簡介'].replace(['nan', 'NaN'], None)
 df_selected['公司簡介'] = df_selected['公司簡介'].fillna("No description available.")
+
+# SORT FILES
+df_selected = df_selected.sort_values(by='預估EPS', ascending=False)
+df_selected.reset_index(drop=True, inplace=True)
 stocks = df_selected.to_dict(orient='records')
 
 
