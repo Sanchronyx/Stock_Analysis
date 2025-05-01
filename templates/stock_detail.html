@@ -3,22 +3,134 @@
 {% block body %}
 <div class="container mt-5">
     {% if stock %}
-        <h2>{{ stock['名稱'] }} ({{ stock['代號'] }})</h2>
-        
-        {% if stock.image_url %}
-            <img src="{{ stock.image_url }}" alt="Company Image" style="max-width: 200px; border-radius: 10px; margin: 15px 0;">
-        {% endif %}
+        <h2 class="stock-title">{{ stock['名稱'] }} ({{ stock['代號'] }})</h2>
 
-        <p><strong>股價:</strong> {{ stock['股價'] }}</p>
-        <p><strong>預估EPS:</strong> {{ stock['預估EPS'] }}</p>
-        <p><strong>盈餘殖利率:</strong> {{ stock['盈餘殖利率(%)'] }}%</p>
-        <p><strong>配息殖利率:</strong> {{ stock['配息殖利率(%)'] }}%</p>
-        <hr>
-        <h4>公司簡介</h4>
-        <p>{{ stock['公司簡介'] }}</p>
+        <div class="stock-info">
+            <p><strong>股價:</strong> {{ stock['股價'] }}</p>
+            <p><strong>預估殖利率:</strong> {{ stock['預估殖利率'] }}</p>
+            <p><strong>配息殖利率:</strong> {{ stock['配息殖利率'] }}</p>
+            <p><strong>去年EPS殖利率:</strong> {{ stock['去年EPS殖利率'] }}</p>
+        </div>
+
+        <div class="section">
+            <h4>AI 公司簡介（Company Overview）</h4>
+            <div class="card-section">{{ ai_summary }}</div>
+        </div>
+
+        <div class="section">
+            <h4>AI 投資建議（AI Investment Suggestion）</h4>
+            <div class="card-highlight">{{ ai_response }}</div>
+        </div>
+
+        <div class="section">
+            <h4>公司優勢與風險（Strengths & Risks）</h4>
+            {% set lines = pros_cons.splitlines() %}
+            {% set strengths = lines[lines.index('Strengths:')+1 : lines.index('Risks:')] %}
+            {% set risks = lines[lines.index('Risks:')+1 :] %}
+
+            <div class="pros-cons-container">
+                <div class="card-pros">
+                    <h5>✅ Strengths</h5>
+                    <ul>
+                        {% for line in strengths if line.startswith('-') %}
+                            <li>{{ line[2:] }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-cons">
+                    <h5>⚠️ Risks</h5>
+                    <ul>
+                        {% for line in risks if line.startswith('-') %}
+                            <li>{{ line[2:] }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
 
     {% else %}
         <h2>Stock not found</h2>
     {% endif %}
 </div>
+
+<style>
+.container {
+    max-width: 900px;
+    margin: auto;
+    background-color: #ffffff;
+    padding: 30px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.stock-title {
+    color: #0066cc;
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.stock-info p {
+    font-size: 17px;
+    margin: 5px 0;
+    text-align: center;
+}
+
+.section {
+    margin-top: 30px;
+}
+
+.card-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-left: 6px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.card-highlight {
+    background-color: #e6f7ff;
+    border-left: 6px solid #44d7f7;
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.8;
+    text-align: justify;
+    white-space: pre-wrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.pros-cons-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.card-pros, .card-cons {
+    flex: 1 1 45%;
+    background-color: #f4fef8;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.card-cons {
+    background-color: #fff6f6;
+}
+
+.card-pros h5, .card-cons h5 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.card-pros ul, .card-cons ul {
+    padding-left: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+</style>
 {% endblock %}

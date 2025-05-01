@@ -6,12 +6,13 @@
             <table id="stockTable" class="styled-table">
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">Rank ⬍</th>
-                        <th onclick="sortTable(1)">Stock ID ⬍</th>
-                        <th onclick="sortTable(2)">Stock Name ⬍</th>
-                        <th onclick="sortTable(4)">股價 ⬍</th>
-                        <th onclick="sortTable(5)">配息殖利率(%) ⬍</th>
-                        <th onclick="sortTable(6)">盈餘殖利率 (%) ⬍</th>
+                        <th><a href="{{ url_for('stock_list', sort_by='Rank', order='asc' if order == 'desc' else 'desc') }}">Rank</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='代號', order='asc' if order == 'desc' else 'desc') }}">Stock ID{% if sort_by == '代號' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='名稱', order='asc' if order == 'desc' else 'desc') }}">Stock Name{% if sort_by == '名稱' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='股價', order='asc' if order == 'desc' else 'desc') }}">股價{% if sort_by == '股價' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='配息殖利率', order='asc' if order == 'desc' else 'desc') }}">配息殖利率{% if sort_by == '配息殖利率' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='預估殖利率', order='asc' if order == 'desc' else 'desc') }}">預估殖利率{% if sort_by == '預估殖利率' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
+                        <th><a href="{{ url_for('stock_list', sort_by='去年EPS殖利率', order='asc' if order == 'desc' else 'desc') }}">去年EPS殖利率{% if sort_by == '去年EPS殖利率' %} {% if order == 'asc' %}⬆️{% else %}⬇️{% endif %}{% endif %}</a></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,34 +22,32 @@
                         <td>{{ stock['代號'] }}</td>
                         <td>{{ stock['名稱'] }}</td>
                         <td>{{ stock['股價'] }}</td>
-                        <td>{{ stock['配息殖利率(%)'] }}</td>
-                        <td>{{ stock['盈餘殖利率(%)'] }}%</td>
+                        <td>{{ stock['配息殖利率'] }}</td>
+                        <td>{{ stock['預估殖利率'] }}</td>
+                        <td>{{ stock['去年EPS殖利率']}}</td>
                     </tr>
                     {% endfor %}
-                </tbody>                
+                </tbody>
             </table>
         </div>
 
-        <!-- Pagination -->
         <div class="pagination">
             {% if page > 1 %}
-                <a href="{{ url_for('stock_list', page=1) }}" class="page-link">1</a>
-                {% if page > 2 %}
-                    <span>...</span>
-                {% endif %}
+                <a href="{{ url_for('stock_list', page=page-1, sort_by=sort_by, order=order) }}">&laquo; Prev</a>
             {% endif %}
-
-            {% for i in range(page-2, page+3) %}
-                {% if i > 1 and i < total_pages %}
-                    <a href="{{ url_for('stock_list', page=i) }}" class="page-link">{{ i }}</a>
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="current">{{ p }}</span>
+                {% elif p <= 2 or p > total_pages - 2 or (p >= page - 2 and p <= page + 2) %}
+                    <a href="{{ url_for('stock_list', page=p, sort_by=sort_by, order=order) }}">{{ p }}</a>
+                {% elif p == 3 and page > 5 %}
+                    <span>...</span>
+                {% elif p == total_pages - 2 and page < total_pages - 4 %}
+                    <span>...</span>
                 {% endif %}
             {% endfor %}
-
             {% if page < total_pages %}
-                {% if page < total_pages - 1 %}
-                    <span>...</span>
-                {% endif %}
-                <a href="{{ url_for('stock_list', page=total_pages) }}" class="page-link">{{ total_pages }}</a>
+                <a href="{{ url_for('stock_list', page=page+1, sort_by=sort_by, order=order) }}">Next &raquo;</a>
             {% endif %}
         </div>
     </div>
@@ -59,65 +58,74 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 20px auto;
-            max-width: 80%;
+            margin: 30px auto;
+            max-width: 1200px;
         }
         .table-container {
-            overflow-x: auto;
-            max-height: 500px;
             width: 100%;
-            border: 1px solid #ddd;
+            overflow-x: auto;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
         }
         .styled-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 18px;
-            text-align: left;
+            font-size: 17px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
         }
         .styled-table thead tr {
             background-color: #44d7f7;
             color: #ffffff;
-            text-align: left;
+            font-weight: bold;
         }
         .styled-table th, .styled-table td {
-            padding: 12px 15px;
+            padding: 14px 16px;
             border: 1px solid #ddd;
         }
+        .styled-table th a {
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+        }
+        .styled-table th a:hover {
+            text-decoration: underline;
+        }
         .styled-table tbody tr:nth-child(even) {
-            background-color: #f3f3f3;
+            background-color: #f9f9f9;
         }
         .styled-table tbody tr:hover {
-            background-color: #f1f1f1;
+            background-color: #e3f6ff;
         }
+
         .pagination {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
         }
-        .pagination a {
-            padding: 5px 10px;
-            margin: 5px;
-            border: 1px solid #007bff;
-            color: #007bff;
+        .pagination a, .pagination span.current {
+            padding: 8px 14px;
+            margin: 4px;
+            border: 1px solid #44d7f7;
+            border-radius: 6px;
+            color: #44d7f7;
             text-decoration: none;
-            border-radius: 5px;
+            display: inline-block;
         }
         .pagination a:hover {
-            background-color: #007bff;
+            background-color: #44d7f7;
             color: white;
         }
-    </style>
-
-    <script>
-        function filterTable() {
-            let input = document.getElementById("searchInput").value.toLowerCase();
-            let rows = document.querySelectorAll("#stockTable tbody tr");
-
-            rows.forEach(row => {
-                let stockId = row.cells[1].innerText.toLowerCase();
-                let stockName = row.cells[2].innerText.toLowerCase();
-                row.style.display = (stockId.includes(input) || stockName.includes(input)) ? "" : "none";
-            });
+        .pagination span.current {
+            background-color: #44d7f7;
+            color: white;
+            font-weight: bold;
         }
-    </script>
-
-    {% endblock %}
+        .pagination span {
+            padding: 8px 14px;
+            color: #777;
+        }
+    </style>
+{% endblock %}
