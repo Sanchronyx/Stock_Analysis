@@ -1,10 +1,14 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import pandas as pd
 import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import csv
+import chromadb
+from chromadb.utils import embedding_functions
+from prompts import prebuilt_prompts
+from retriever import fetch_yahoo_data
 
 app = Flask(__name__)
 
@@ -13,20 +17,24 @@ load_dotenv()
 print("LOADED API KEY:", os.getenv("OPENAI_API_KEY"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Initialize ChromaDB and embedder
+chroma_client = chromadb.Client()
+chroma_embedder = embedding_functions.OpenAIEmbeddingFunction(api_key=os.getenv("OPENAI_API_KEY"))
+chroma_collection = chroma_client.get_or_create_collection(
+    name="company_info",
+    embedding_function=chroma_embedder
+)
+
 # CALCULATIONS FROM 育成 FOR THE EPS & Profit Margins
+columns_needed = [
+    '名稱', '代號', '股價', '配息殖利率', '預估殖利率', '去年EPS殖利率',
+    '預估EPS', '去年EPS', '今年配息', '去年配息', '五年均配息率', '股數（張）'
+]
 calc_df = pd.read_csv("calculations.csv")
-calc_df['代號'] = calc_df['代號'].astype(str).str.replace('="', '').str.replace('"', '')
-df_selected = calc_df[['名稱', '代號', '股價', '配息殖利率', '預估殖利率', '去年EPS殖利率']].copy()
+calc_df['代號'] = calc_df['代號'].astype(str).str.replace('=\"', '').str.replace('"', '')
+df_selected = calc_df[columns_needed].copy()
 
-# COMPANY INTRODUCTION FILE
-company_info_df = pd.read_csv("company_info.csv")
-company_info_df['代號'] = company_info_df['代號'].astype(str)
-company_info_df = company_info_df[['代號', '公司簡介']]  
-
-# MERGE FILES
-df_selected = pd.merge(df_selected, company_info_df, on='代號', how='left')
-df_selected['公司簡介'] = df_selected['公司簡介'].replace(['nan', 'NaN'], None)
-df_selected['公司簡介'] = df_selected['公司簡介'].fillna("No description available.")
+# NO INFORMATION QUERY
 df_selected['配息殖利率'] = df_selected['配息殖利率'].fillna("No information available.")
 df_selected['預估殖利率'] = df_selected['預估殖利率'].fillna("No information available.")
 df_selected['去年EPS殖利率'] = df_selected['去年EPS殖利率'].fillna("No information available.")
@@ -66,7 +74,6 @@ def top12():
     sorted_top = df_selected.copy()
     sorted_top['sort_key'] = sorted_top['預估殖利率'].apply(safe_float)
     sorted_top = sorted_top.sort_values(by='sort_key', ascending=False)
-
     top_stocks = sorted_top.head(12).to_dict(orient='records')
     return render_template('top12.html', stocks=top_stocks)
 
@@ -77,14 +84,13 @@ def stock_list():
     sort_by = request.args.get('sort_by', '預估殖利率')
     order = request.args.get('order', 'desc')
 
-    # Sort the full dataset
     sorted_df = df_selected.copy()
 
     def safe_float(val):
         try:
             return float(str(val).replace('%', '').strip())
         except:
-            return float('-inf')  # treat "No information" as lowest priority
+            return float('-inf')
 
     if sort_by in sorted_df.columns:
         sorted_df['sort_key'] = sorted_df[sort_by].apply(safe_float)
@@ -116,42 +122,30 @@ def stock_detail(stock_id):
     if stock_id in ai_cache:
         ai_data = eval(ai_cache[stock_id]) if isinstance(ai_cache[stock_id], str) else ai_cache[stock_id]
     else:
-        investment_prompt = f"""
-        Company: {stock_info['名稱']} ({stock_info['代號']})
-        EPS Yield Last Year: {stock_info['去年EPS殖利率']}
-        Estimated Dividend Yield: {stock_info['預估殖利率']}
-        Dividend Yield: {stock_info['配息殖利率']}
-        Price: {stock_info['股價']}
+        # Retrieve the most relevant description using vector similarity
+        try:
+            chroma_result = chroma_collection.query(
+                query_texts=[f"{stock_info['名稱']} {stock_info['代號']}"],
+                n_results=1
+            )
+            summary_info = chroma_result['documents'][0][0] if chroma_result['documents'] else "No description found."
+        except Exception as e:
+            summary_info = f"Error retrieving description: {e}"
 
-        Based on this data, do you think this stock is worth investing in?
-        Give a clear YES or NO and a brief explanation.
-        """
-
-        pros_cons_prompt = f"""
-        Analyze the following stock:
-        Name: {stock_info['名稱']}
-        EPS: {stock_info['去年EPS殖利率']}
-        Yield: {stock_info['預估殖利率']}, Dividend: {stock_info['配息殖利率']}, Price: {stock_info['股價']}
-
-        What are the top 2 strengths and top 2 potential risks of investing in this company?
-        Return your answer in this format:
-        Strengths:
-        - [point 1]
-        - [point 2]
-
-        Risks:
-        - [point 1]
-        - [point 2]
-        """
-
-        description_prompt = f"""
-        Give a short, clear overview of the company {stock_info['名稱']} based on the following:
-        - Industry sector (if known)
-        - Business model and revenue sources (if described)
-        - General reputation and performance
-
-        Raw Info: {stock_info['預估殖利率']}, Dividend: {stock_info['配息殖利率']}, Price: {stock_info['股價']}
-        """
+        # Fetch Yahoo Finance data
+        # Fetch Yahoo Finance data
+        try:
+            yahoo_data = fetch_yahoo_data(stock_id)
+            price_history = yahoo_data.get("price_history", {"dates": [], "prices": []})
+        except Exception as e:
+            yahoo_data = {}
+            price_history = {"dates": [], "prices": []}
+            print(f"Yahoo data fetch failed for {stock_id}: {e}")
+            
+        price_history = yahoo_data.get("price_history", {"dates": [], "prices": []})
+        
+        # Generate prompts
+        investment_prompt, pros_cons_prompt, description_prompt = prebuilt_prompts(stock_info, summary_info, yahoo_data)
 
         try:
             main = client.chat.completions.create(
@@ -188,10 +182,27 @@ def stock_detail(stock_id):
         except Exception as e:
             ai_data = {"analysis": f"Error: {e}", "pros_cons": "N/A", "summary": "N/A"}
 
-    return render_template("stock_detail.html", stock=stock_info,
-                           ai_response=ai_data["analysis"],
-                           pros_cons=ai_data["pros_cons"],
-                           ai_summary=ai_data["summary"])
+    return render_template(
+        "stock_detail.html",
+        stock=stock_info,
+        ai_response=ai_data["analysis"],
+        pros_cons=ai_data["pros_cons"],
+        ai_summary=ai_data["summary"],
+        price_history=yahoo_data.get("price_history", {"dates": [], "prices": []}) 
+    )
+
+# REGENERATE BUTTON
+@app.route('/regenerate/<stock_id>', methods=['POST'])
+def regenerate_stock(stock_id):
+    if stock_id in ai_cache:
+        del ai_cache[stock_id]
+
+    if os.path.exists(CACHE_FILE):
+        df = pd.read_csv(CACHE_FILE)
+        df = df[df['代號'] != stock_id]
+        df.to_csv(CACHE_FILE, index=False, encoding='utf-8')
+
+    return redirect(f"/stock/{stock_id}")
 
 # CALCULATOR PAGE
 @app.route('/calculator', methods=['GET', 'POST'])
